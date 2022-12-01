@@ -1,9 +1,10 @@
 import {useEffect, useState} from 'react';
 import Cell from '../Cell/Cell';
+import * as _ from 'lodash-es';
 
 import './Board.css';
 import Numpad from '../Numpad/Numpad';
-
+import {GRID_SIZE, SQUARE_SIZE} from '../../constants/grid-size.const';
 
 interface BoardProps {
   cells: Array<number | null>;
@@ -21,37 +22,33 @@ function Board(props: BoardProps) {
       return [];
     }
 
-    const row = Math.floor(index / 9);
-    const col = index - row * 9;
+    const row = Math.floor(index / GRID_SIZE);
+    const col = index - row * GRID_SIZE;
 
     const nums = new Set();
 
-    // Check horizontal row
-    for (let i = 0; i < 9; i++) {
-      const cellIndex = row * 9 + i;
+    const addCellValue = (row: number, col: number) => {
+      const cellIndex = row * GRID_SIZE + col;
       const val = getCellValue(cellIndex);
       nums.add(val);
     }
 
-    // Check vertical row
-    for (let i = 0; i < 9; i++) {
-      const cellIndex = i * 9 + col;
-      const val = getCellValue(cellIndex);
-      nums.add(val);
+    // Check vertical and horizontal rows
+    for (let i = 0; i < GRID_SIZE; i++) {
+      addCellValue(row, i);
+      addCellValue(i, col);
     }
 
-    // Check small square
-    const smallRowStart = Math.floor(row / 3) * 3;
-    const smallColStart = Math.floor(col / 3) * 3;
-    for (let i = smallRowStart; i < smallRowStart + 3; i++) {
-      for (let j = smallColStart; j < smallColStart + 3; j++) {
-        const cellIndex = i * 9 + j;
-        const val = getCellValue(cellIndex);
-        nums.add(val);
+    // Check current square
+    const smallRowStart = Math.floor(row / SQUARE_SIZE) * SQUARE_SIZE;
+    const smallColStart = Math.floor(col / SQUARE_SIZE) * SQUARE_SIZE;
+    for (let i = smallRowStart; i < smallRowStart + SQUARE_SIZE; i++) {
+      for (let j = smallColStart; j < smallColStart + SQUARE_SIZE; j++) {
+        addCellValue(i, j);
       }
     }
 
-    return [...new Array(9)].map((_, index) => index + 1).filter(v => !nums.has(v));
+    return _.range(1, GRID_SIZE + 1).filter(v => !nums.has(v));
   }
 
   const setActiveCellValue = (value: number) => {
@@ -69,20 +66,20 @@ function Board(props: BoardProps) {
     const interval = setInterval(() => {
       const map = new Map();
 
-      for (let i = 0; i < 99; i++) {
+      for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
         map.set(i, getAvailableNums(i));
       }
 
-      const vals = [...map.entries()].filter(([index, options]) => options.length > 0);
-      vals.sort(([index1, options1], [index2, options2]) => options1.length - options2.length);
+      const entries = [...map.entries()].filter(([, options]) => options.length > 0);
+      entries.sort(([, options1], [, options2]) => options1.length - options2.length);
 
-      if (!vals.length) {
+      if (!entries.length) {
         clearInterval(interval);
         return;
       }
 
-      const index = vals[0][0];
-      const num = vals[0][1][0];
+      const index = entries[0][0];
+      const num = entries[0][1][0];
 
       props.setCell(index, num);
     }, 100);
@@ -93,7 +90,7 @@ function Board(props: BoardProps) {
   });
 
 
-  const cells = [...new Array(81)].map((_, index) => {
+  const cells = [...new Array(GRID_SIZE * GRID_SIZE)].map((_, index) => {
     return (
       <Cell
         numsAvailable={getAvailableNums(index).length}
