@@ -12,13 +12,21 @@ export default class App extends Component<void, AppState> {
     super(props);
 
     this.state = {
-      cells: [...new Array(9 * 9)].map((_, index) => index),
+      cells: [...new Array(9 * 9)].map(() => null),
     };
   }
 
   render() {
     return (
-      <Board cells={this.state.cells}/>
+      <div className="board-container">
+        <Board cells={this.state.cells} setCell={(index, value) => this.setCell(index, value)}/>
+      </div>
     )
+  }
+
+  private setCell(index: number, value: number | null): void {
+    const cells = [...this.state.cells];
+    cells[index] = value;
+    this.setState({cells});
   }
 }

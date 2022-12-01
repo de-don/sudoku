@@ -1,0 +1,12 @@
+.numpad-container {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.numpad-button {
+  border: 1px solid red;
+  border-radius: 4px;
+  font-size: 20px;
+  padding: 5px 10px;
+}

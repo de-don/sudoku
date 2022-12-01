@@ -1,9 +1,13 @@
 import {Component} from 'react';
 import Cell from './Cell';
 
+import './Board.css';
+import Numpad from './Numpad';
+
 
 interface BoardProps {
   cells: Array<number | null>;
+  setCell: (index: number, value: number | null) => void;
 }
 
 interface BoardState {
@@ -20,50 +24,87 @@ export class Board extends Component<Readonly<BoardProps>, BoardState> {
   }
 
   render() {
-    const rows = [...new Array(9)].map((_, rowNum) => {
-      const cols = [...new Array(9)].map((_, colNum) => {
-        return (
-          <Cell
-            key={colNum}
-            row={rowNum}
-            col={colNum}
-            value={this.getCellValue(rowNum, colNum)}
-            isActive={this.isActive(rowNum, colNum)}
-            onClick={() => this.handleClick(rowNum, colNum)}
-          />
-        );
-      });
-
+    const cells = [...new Array(81)].map((_, index) => {
       return (
-        <div key={rowNum} className="row">
-          {cols}
-        </div>
-      )
-    })
+        <Cell
+          numsAvailable={this.getAvailableNums(index).length}
+          key={index}
+          value={this.getCellValue(index)}
+          isActive={this.isActive(index)}
+          onClick={() => this.handleClick(index)}
+        />
+      );
+    });
+
 
     return (
-      <div className="board">
-        {rows}
+      <div>
+        <div className="board">
+          {cells}
+        </div>
+
+        {this.state.activeCell &&
+          <Numpad onClick={num => this.setNum(num)} nums={this.getAvailableNums(this.state.activeCell)}></Numpad>}
       </div>
     )
   }
 
-  private fromCoordinates(row: number, col: number): number {
-    return row * 9 + col;
+  private getAvailableNums(index: number): number[] {
+    if (this.getCellValue(index)) {
+      return [];
+    }
+
+    const row = Math.floor(index / 9);
+    const col = index - row * 9;
+
+    const nums = new Set();
+
+    // Check horizontal row
+    for (let i = 0; i < 9; i++) {
+      const cellIndex = row * 9 + i;
+      const val = this.getCellValue(cellIndex);
+      nums.add(val);
+    }
+
+    // Check vertical row
+    for (let i = 0; i < 9; i++) {
+      const cellIndex = i * 9 + col;
+      const val = this.getCellValue(cellIndex);
+      nums.add(val);
+    }
+
+    // Check small square
+    const smallRowStart = Math.floor(row / 3) * 3;
+    const smallColStart = Math.floor(col / 3) * 3;
+    for (let i = smallRowStart; i < smallRowStart + 3; i++) {
+      for (let j = smallColStart; j < smallColStart + 3; j++) {
+        const cellIndex = i * 9 + j;
+        const val = this.getCellValue(cellIndex);
+        nums.add(val);
+      }
+    }
+
+    return [...new Array(9)].map((_, index) => index + 1).filter(v => !nums.has(v));
   }
 
-  private handleClick(rowNum: number, colNum: number): void {
-    const index = this.fromCoordinates(rowNum, colNum);
-    this.setState(state => ({...state, activeCell: index}))
+  private setNum(num: number): void {
+    if (!this.state.activeCell) {
+      return;
+    }
+
+    this.props.setCell(this.state.activeCell, num);
+    this.setState({activeCell: null})
   }
 
-  private getCellValue(rowNum: number, colNum: number): number | null {
-    const index = this.fromCoordinates(rowNum, colNum);
+  private handleClick(index: number): void {
+    this.setState({activeCell: index})
+  }
+
+  private getCellValue(index: number): number | null {
     return this.props.cells[index];
   }
 
-  private isActive(rowNum: number, colNum: number): boolean {
-    const index = this.fromCoordinates(rowNum, colNum);
+  private isActive(index: number): boolean {
     return this.state.activeCell === index;
   }
 }
