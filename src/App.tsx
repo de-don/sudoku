@@ -1,32 +1,21 @@
-import {Component} from 'react'
+import {useState} from 'react'
 import './App.css'
-import {Board} from './components/Board';
+import Board from './components/Board/Board';
 
+function App() {
+  const [cells, setCells] = useState<Array<number | null>>([...new Array(9 * 9)].map(() => null));
 
-interface AppState {
-  cells: Array<null | number>;
+  const setCell = (index: number, value: number | null) => {
+    const newCells = [...cells];
+    newCells[index] = value;
+    setCells(newCells);
+  };
+
+  return (
+    <div className="board-container">
+      <Board cells={cells} setCell={(index, value) => setCell(index, value)}/>
+    </div>
+  );
 }
 
-export default class App extends Component<void, AppState> {
-  constructor(props: void) {
-    super(props);
-
-    this.state = {
-      cells: [...new Array(9 * 9)].map(() => null),
-    };
-  }
-
-  render() {
-    return (
-      <div className="board-container">
-        <Board cells={this.state.cells} setCell={(index, value) => this.setCell(index, value)}/>
-      </div>
-    )
-  }
-
-  private setCell(index: number, value: number | null): void {
-    const cells = [...this.state.cells];
-    cells[index] = value;
-    this.setState({cells});
-  }
-}
+export default App;
