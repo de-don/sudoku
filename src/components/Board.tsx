@@ -20,7 +20,29 @@ export class Board extends Component<Readonly<BoardProps>, BoardState> {
 
     this.state = {
       activeCell: null,
-    }
+    };
+
+    // Auto solver
+    const interval = setInterval(() => {
+      const map = new Map();
+
+      for (let i = 0; i < 99; i++) {
+        map.set(i, this.getAvailableNums(i));
+      }
+
+      const vals = [...map.entries()].filter(([index, options]) => options.length > 0);
+      vals.sort(([index1, options1], [index2, options2]) => options1.length - options2.length);
+
+      if (!vals.length) {
+        clearInterval(interval);
+        return;
+      }
+
+      const index = vals[0][0];
+      const num = vals[0][1][0];
+
+      this.props.setCell(index, num);
+    }, 100);
   }
 
   render() {
@@ -88,12 +110,12 @@ export class Board extends Component<Readonly<BoardProps>, BoardState> {
   }
 
   private setNum(num: number): void {
-    if (!this.state.activeCell) {
+    if (this.state.activeCell === null) {
       return;
     }
 
-    this.props.setCell(this.state.activeCell, num);
     this.setState({activeCell: null})
+    this.props.setCell(this.state.activeCell, num);
   }
 
   private handleClick(index: number): void {
